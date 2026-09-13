@@ -1,0 +1,8 @@
+interface:
+  display_name: "场外期权分析"
+  short_description: "中文审查场外期权条款、估值、交易对手及退出风险"
+  brand_color: "#C8F15B"
+  default_prompt: "使用 $changwai-qiuzhu-cn 审查这份场外期权 term sheet，并列出阻断项与情景损益。"
+
+policy:
+  allow_implicit_invocation: true
