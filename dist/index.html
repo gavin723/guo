@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Gavin 的 Alpha 市场、机构、资金、结构与风险综合决策系统。" />
+    <title>Alpha Radar V1.6</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="topbar shell">
+      <a class="brand" href="#radar" aria-label="返回雷达首页">
+        <span class="brand-mark">A</span>
+        <span><strong>ALPHA RADAR</strong><small>V1.6 · TECHNICAL + OPTIONS</small></span>
+      </a>
+      <div class="top-actions">
+        <span class="privacy-pill"><i></i> IBKR 已连接</span>
+        <button class="ghost-btn compact" id="openImport" type="button">导入今日数据</button>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section id="radar" class="hero-section">
+        <div class="eyebrow">DECISION BEFORE EXECUTION</div>
+        <div class="hero-grid">
+          <div>
+            <h1>真实数据先验证，<br /><span>信号不完整就等待。</span></h1>
+            <p class="hero-copy">用 IBKR 日线计算 MA20/50/200、MACD、RSI、Volume/RVOL 与 ATR；只有技术共振、截图验证和期权流动性全部通过，才允许进入计划。</p>
+          </div>
+          <div class="market-card">
+            <div class="market-card-head">
+              <span>Alpha 市场环境</span><span class="data-badge">IBKR 最近快照</span>
+            </div>
+            <div class="regime-switch" role="group" aria-label="选择市场环境">
+              <button data-regime="risk-off" type="button">防守</button>
+              <button class="active" data-regime="neutral" type="button">中性</button>
+              <button data-regime="risk-on" type="button">进攻</button>
+            </div>
+            <div class="decision-line">
+              <div><small>市场结论</small><strong id="marketDecision">中性偏防守</strong></div>
+              <div class="score-ring"><b id="marketScore">--</b><span>/20</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <div class="symbol-search"><input id="symbolSearch" maxlength="8" placeholder="输入标的，如 NVDA" aria-label="输入股票代码" /><button id="findSymbol" type="button">验证走势</button></div>
+          <button class="primary-btn" id="runScan" type="button"><span>运行 Alpha 评估</span><b>→</b></button>
+          <a class="secondary-btn chart-shortcut" href="#chartValidation">上传 K 线验证</a>
+          <span id="scanStatus" class="scan-status">IBKR 数据截至 2026-09-11 美股收盘</span>
+        </div>
+      </section>
+
+      <section class="panel radar-panel" aria-labelledby="rankingTitle">
+        <div class="section-head">
+          <div><span class="section-index">01</span><h2 id="rankingTitle">Alpha 候选榜</h2></div>
+          <div class="legend"><span><i class="dot aplus"></i>A+ ≥17</span><span><i class="dot a"></i>A 15–16</span><span><i class="dot watch"></i>观察 ≤14</span></div>
+        </div>
+        <div class="metrics-strip">
+          <div><small>扫描标的</small><strong id="metricCount">10</strong></div>
+          <div><small>技术候选</small><strong id="metricQualified">--</strong></div>
+          <div><small>完整 Alpha 数据</small><strong id="metricFlow">0</strong></div>
+          <div><small>可执行计划</small><strong id="metricPlans">0 / 2</strong></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>标的</th><th>IBKR 最近价</th><th>MA20 / 50 / 200</th><th>RSI 14</th><th>MACD / 信号</th><th>Volume / RVOL</th><th>技术</th><th>入场</th><th>行动</th></tr></thead>
+            <tbody id="radarRows"></tbody>
+          </table>
+        </div>
+        <p class="source-note">价格与指标由 IBKR 截至 2026-09-11 的最后一根完整日线计算，不是盘中连续推送。市场休市或插件不在线时显示快照时间；缺少机构、资金、新闻或期权 Volume 时不会生成可执行信号。</p>
+      </section>
+
+      <section id="cockpit" class="workspace-grid">
+        <article class="panel cockpit-panel">
+          <div class="section-head">
+            <div><span class="section-index">02</span><h2>Alpha 综合评估与交易计划</h2></div>
+            <span class="selected-ticker" id="selectedTicker">NVDA</span>
+          </div>
+          <div class="score-breakdown" id="scoreBreakdown"></div>
+          <div class="indicator-dashboard" id="indicatorDashboard" aria-label="技术指标面板"></div>
+          <div class="entry-timing" id="entryTiming"></div>
+          <div class="option-contract" id="optionContract"></div>
+          <div class="chart-validation-card" id="chartValidation">
+            <div class="validation-head">
+              <div><span>ENTRY GATE</span><h3>入场前 K 线截图验证</h3></div>
+              <b>保存计划前必做</b>
+            </div>
+            <p class="validation-copy">先上传当前标的走势图，再逐项核对均线、MACD、RSI、量能、结构与止损。指标由 IBKR 行情自动预填；截图只在本浏览器预览，系统不会声称仅凭图片“确保胜率”。</p>
+            <div class="chart-validation-grid">
+              <label class="upload-zone" id="uploadZone">
+                <input id="chartUpload" type="file" accept="image/png,image/jpeg,image/webp" />
+                <span class="upload-icon">↥</span><b>点击上传走势图</b><small>PNG / JPG / WEBP，最大 8MB</small>
+                <img id="chartPreview" alt="上传的走势图预览" />
+              </label>
+              <div class="chart-evaluator">
+                <div class="chart-rule-title"><b>趋势验证</b><small id="technicalSummary">选择标的后自动显示 MA 与量能</small></div>
+                <label><input type="checkbox" data-chart-rule="trend" /> MA20 / 50 / 200 与交易方向一致</label>
+                <label><input type="checkbox" data-chart-rule="macd" /> MACD 已越过信号线且柱体改善</label>
+                <label><input type="checkbox" data-chart-rule="rsi" /> RSI 位于顺势但不过热区间</label>
+                <label><input type="checkbox" data-chart-rule="volume" /> 突破时 Volume / RVOL 明显放大</label>
+                <label><input type="checkbox" data-chart-rule="breakout" /> 收盘确认突破/跌破关键价位</label>
+                <label><input type="checkbox" data-chart-rule="stop" /> 止损位清晰，单笔风险可控</label>
+                <button class="ghost-btn compact" id="evaluateChart" type="button">生成 K 线评估</button>
+                <div class="chart-result" id="chartEvaluation">请先上传当前标的走势图</div>
+              </div>
+            </div>
+          </div>
+          <form id="tradeForm" class="trade-form">
+            <div class="form-grid">
+              <label>账户资金 ($)<input id="accountSize" name="accountSize" type="number" min="100" step="100" value="4700" /></label>
+              <label>单笔风险 (%)<input id="riskPct" name="riskPct" type="number" min="0.1" max="5" step="0.1" value="1" /></label>
+              <label>计划入场日期<input id="entryDate" name="entryDate" type="date" /></label>
+              <label>计划入场价<input id="entryPrice" name="entryPrice" type="number" min="0" step="0.01" required /></label>
+              <label>严格止损价<input id="stopPrice" name="stopPrice" type="number" min="0" step="0.01" required /></label>
+              <label>第一目标价<input id="targetPrice" name="targetPrice" type="number" min="0" step="0.01" required /></label>
+              <label>期权权利金（可选）<input id="optionPremium" name="optionPremium" type="number" min="0" step="1" placeholder="≤ 100" /></label>
+              <label>期权到期日<input id="contractExpiry" name="contractExpiry" type="date" /></label>
+              <label>行权价<input id="contractStrike" name="contractStrike" type="number" min="0" step="0.5" /></label>
+              <label>方向<select id="contractSide" name="contractSide"><option value="CALL">CALL 看涨</option><option value="PUT">PUT 看跌</option><option value="STOCK">正股</option></select></label>
+            </div>
+            <div class="risk-output" aria-live="polite">
+              <div><small>最多股数</small><strong id="sharesOut">--</strong></div>
+              <div><small>计划风险</small><strong id="riskOut">--</strong></div>
+              <div><small>盈亏比</small><strong id="rrOut">--</strong></div>
+              <p id="riskMessage">输入入场、止损和目标价，系统自动计算仓位。</p>
+            </div>
+            <button class="primary-btn full" type="submit"><span>保存为执行计划</span><b>+</b></button>
+          </form>
+          <div class="saved-plans" id="savedPlans"></div>
+        </article>
+
+        <aside class="panel detail-panel">
+          <div class="detail-head"><span>当前标的</span><strong id="detailSymbol">NVDA</strong></div>
+          <div id="detailVerdict" class="verdict-card"></div>
+          <div class="rule-list">
+            <div><span>机构 / 13F</span><b id="institutionValue">待接入</b></div>
+            <div><span>资金 / 暗池 / 期权流</span><b id="capitalValue">待接入</b></div>
+            <div><span>趋势结构</span><b id="structureValue">--</b></div>
+            <div><span>期权合约</span><b id="contractValue">--</b></div>
+            <div><span>新闻 / 催化剂</span><b id="catalystValue">待接入</b></div>
+          </div>
+          <div class="hard-rule"><b>硬规则</b><p>技术评分低于 15/20、没有明确触发、截图未验证，或机构/资金/新闻任一关键数据缺失时只能观察；期权成本超过 100 美元、价差超过 15%、OI 低于 500、Volume 缺失或 DTE 不在 21–45 天时禁止执行。</p></div>
+        </aside>
+      </section>
+
+      <section id="journal" class="panel intelligence-panel">
+        <div class="section-head">
+          <div><span class="section-index">03</span><h2>资金异动、数据源与复盘</h2></div>
+          <button class="ghost-btn compact" id="clearJournal" type="button">清空本地记录</button>
+        </div>
+        <div class="intelligence-grid">
+          <div>
+            <div class="subhead"><h3>Smart Money Radar</h3><span>需要期权成交与持仓数据</span></div>
+            <div id="flowAlerts" class="alert-list"></div>
+          </div>
+          <div>
+            <div class="subhead"><h3>期权数据接入状态</h3><span>仅使用授权接口或文件</span></div>
+            <div class="provider-list">
+              <div class="provider-row"><div><b>Interactive Brokers</b><small>日线 OHLCV、期权链、Bid / Ask、OI</small></div><strong class="provider-ready">已连接 · 当前为收盘快照</strong></div>
+              <div class="provider-row"><div><b>Barchart OnDemand</b><small>正式 Options Screener API</small></div><strong>可接入 · 等待 API Key</strong></div>
+              <div class="provider-row"><div><b>OptionCharts</b><small>实时页面与数据下载；未发现公开 API</small></div><strong>支持授权文件导入</strong></div>
+              <p>不会抓取会员网页或复用浏览器登录。接入后可补齐 Volume、OI、IV、价差及异常活动，评分仍会显示数据时间与来源。</p>
+            </div>
+            <div class="subhead journal-head"><h3>交易复盘</h3><span>保存在当前浏览器</span></div>
+            <textarea id="journalNote" rows="4" placeholder="记录入场理由、关键支撑、失效条件与复盘结论…"></textarea>
+            <button class="secondary-btn" id="saveNote" type="button">保存复盘笔记</button>
+            <div id="noteList" class="note-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shell"><span>Alpha Radar V1.6</span><span>规则优先 · 风险优先 · 数据透明</span></footer>
+
+    <dialog id="importDialog">
+      <form method="dialog" class="dialog-card">
+        <div class="dialog-head"><div><small>DATA INPUT</small><h2>导入今日数据</h2></div><button value="cancel" aria-label="关闭">×</button></div>
+        <p>支持 CSV 或 JSON。核心字段：ticker, price, change, ma20, ma50, ma200, rsi14, macd, macdSignal, volume, relVolume, institution, capital, catalyst, technical；期权字段可用 optionExpiration, optionStrike, optionType, bid, ask, optionVolume, openInterest。</p>
+        <textarea id="importText" rows="12" spellcheck="false"></textarea>
+        <div id="importFeedback" class="import-feedback"></div>
+        <div class="dialog-actions"><button class="ghost-btn" value="cancel">取消</button><button class="primary-btn" id="applyImport" value="default" type="button"><span>校验并应用</span><b>→</b></button></div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
