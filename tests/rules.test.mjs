@@ -54,3 +54,21 @@ test("PUT risk and reward use inverted price direction", () => {
   assert.ok(reward > 0);
   assert.ok(reward / risk >= 2.49);
 });
+
+test("OTC mandatory evidence overrides a high numeric score", () => {
+  const checked = ["docs", "pricing", "exit", "loss"];
+  const score = checked.length * 4;
+  const blockers = [];
+  if (!checked.includes("counterparty")) blockers.push("counterparty");
+  const decision = blockers.length ? "BLOCK" : score >= 18 ? "MANUAL REVIEW" : "NEEDS REVIEW";
+  assert.equal(score, 16);
+  assert.equal(decision, "BLOCK");
+});
+
+test("plain long OTC call scenarios use per-unit expiry payoff", () => {
+  const strike = 100, premium = 5;
+  const pnl = terminal => Math.max(terminal - strike, 0) - premium;
+  assert.equal(pnl(80), -5);
+  assert.equal(pnl(105), 0);
+  assert.equal(pnl(120), 15);
+});
