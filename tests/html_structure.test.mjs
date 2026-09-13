@@ -9,7 +9,10 @@ test("required Alpha workflow controls are present exactly once", () => {
     "symbolSearch", "findSymbol", "marketScore", "radarRows", "scoreBreakdown",
     "optionContract", "tradeForm", "optionPremium", "contractExpiry",
     "contractStrike", "contractSide", "entryDate", "indicatorDashboard", "entryTiming",
-    "chartValidation", "chartUpload", "evaluateChart"
+    "chartValidation", "chartUpload", "evaluateChart", "otcReview", "otcForm",
+    "otcUnderlying", "otcProductType", "otcPosition", "otcNotional", "otcSpot",
+    "otcStrike", "otcPremium", "otcExpiry", "otcCounterparty", "otcTerms",
+    "evaluateOtc", "saveOtcReview", "otcResult", "otcSaved"
   ];
   for (const id of ids) {
     assert.equal((html.match(new RegExp(`id=[\"']${id}[\"']`, "g")) || []).length, 1, id);
@@ -32,4 +35,10 @@ test("technical and option decision fields are visible", () => {
   assert.match(html, /MACD \/ 信号/);
   assert.match(html, /Volume \/ RVOL/);
   assert.match(html, /计划入场日期/);
+});
+
+test("OTC review exposes the evidence gate and never promises auto execution", () => {
+  assert.match(html, /changwai-qiuzhu-cn/);
+  assert.equal((html.match(/data-otc-check=/g) || []).length, 5);
+  assert.match(html, /BLOCK、NEEDS REVIEW 或 MANUAL REVIEW/);
 });
