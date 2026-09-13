@@ -1,0 +1,9 @@
+{
+  "name": "alpha-radar-v1-6",
+  "version": "1.6.0",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 4173 --directory dist",
+    "check": "node --check dist/app.js && node --test tests/*.test.mjs"
+  }
+}
