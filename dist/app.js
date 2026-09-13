@@ -6,6 +6,7 @@
     watchlist: "alpha-v16-watchlist-v1",
     plans: "alpha-v16-plans-v1",
     notes: "alpha-v16-notes-v1",
+    otcCases: "alpha-v16-otc-cases-v1",
     regime: "alpha-v16-regime"
   };
   const componentNames = { market: "市场", institution: "机构", capital: "资金", technical: "结构", catalyst: "催化" };
@@ -13,6 +14,8 @@
   let watchlist = load(STORAGE.watchlist, defaultRows);
   let plans = load(STORAGE.plans, []);
   let notes = load(STORAGE.notes, []);
+  let otcCases = load(STORAGE.otcCases, []);
+  let lastOtcReview = null;
   let regime = localStorage.getItem(STORAGE.regime) || "neutral";
   let selected = watchlist.find(item => item.ticker === "NVDA")?.ticker || watchlist[0]?.ticker || "NVDA";
   let chartState = { ticker: selected, uploaded: false, passed: false };
@@ -28,6 +31,7 @@
     contractValue: $("contractValue"), catalystValue: $("catalystValue"), optionContract: $("optionContract"),
     sharesOut: $("sharesOut"), riskOut: $("riskOut"), rrOut: $("rrOut"), riskMessage: $("riskMessage"),
     savedPlans: $("savedPlans"), flowAlerts: $("flowAlerts"), noteList: $("noteList"),
+    otcResult: $("otcResult"), otcSaved: $("otcSaved"),
     dialog: $("importDialog"), importText: $("importText"), importFeedback: $("importFeedback"), toast: $("toast")
   };
 
@@ -92,6 +96,7 @@
     renderPlans();
     renderAlerts();
     renderNotes();
+    renderOtcCases();
     updateRegimeButtons();
     calculateRisk();
   }
@@ -314,6 +319,66 @@
     const list = notes.slice().reverse();
     els.noteList.innerHTML = list.map(note => `<div class="note-item"><small>${escapeHtml(note.date)} · ${escapeHtml(note.ticker)}</small><p>${escapeHtml(note.text)}</p></div>`).join("");
   }
+  function evaluateOtc() {
+    const underlying = $("otcUnderlying").value.trim().toUpperCase();
+    const product = $("otcProductType").value;
+    const position = $("otcPosition").value;
+    const notional = Number($("otcNotional").value);
+    const spot = Number($("otcSpot").value);
+    const strike = Number($("otcStrike").value);
+    const premium = Number($("otcPremium").value);
+    const expiry = $("otcExpiry").value;
+    const counterparty = $("otcCounterparty").value.trim();
+    const quoteSource = $("otcQuoteSource").value.trim();
+    const terms = $("otcTerms").value.trim();
+    const checked = [...document.querySelectorAll("[data-otc-check]:checked")].map(input => input.dataset.otcCheck);
+    const score = checked.length * 4;
+    const blockers = [];
+    if (!underlying) blockers.push("缺少标的");
+    if (![notional, spot, strike, premium].every(value => value > 0)) blockers.push("名义本金、现价、行权价或权利金无效");
+    if (!expiry || new Date(`${expiry}T00:00:00Z`) <= new Date()) blockers.push("到期日无效或已经到期");
+    if (!counterparty) blockers.push("交易对手法律实体不明");
+    if (terms.length < 30) blockers.push("关键条款不足，无法重建支付结构");
+    if (!checked.includes("docs")) blockers.push("没有完整 term sheet 与支付公式");
+    if (!checked.includes("counterparty")) blockers.push("交易对手、担保或抵押安排未审查");
+    if (!checked.includes("loss")) blockers.push("最大损失或路径条件未确认");
+    if (position === "SELL") blockers.push("卖方尾部损失需要独立保证金与专业适当性审查");
+    const complex = !["CALL", "PUT"].includes(product);
+    const gaps = {
+      docs: "完整条款",
+      pricing: "独立估值/第二报价",
+      counterparty: "交易对手与抵押",
+      exit: "提前终止与退出报价",
+      loss: "最大损失与路径"
+    };
+    const missing = Object.entries(gaps).filter(([key]) => !checked.includes(key)).map(([, label]) => label);
+    const decision = blockers.length ? "BLOCK" : score >= 18 && !complex ? "MANUAL REVIEW" : "NEEDS REVIEW";
+    const breakeven = product === "CALL" ? strike + premium : product === "PUT" ? strike - premium : null;
+    const scenarios = [0.8, 0.9, 1, 1.1, 1.2].map(factor => {
+      const terminal = spot * factor;
+      let net = null;
+      if (product === "CALL") net = Math.max(terminal - strike, 0) - premium;
+      if (product === "PUT") net = Math.max(strike - terminal, 0) - premium;
+      if (position === "SELL" && net !== null) net = -net;
+      return { terminal, net };
+    });
+    const review = { underlying, product, position, notional, spot, strike, premium, expiry, counterparty, quoteSource, terms, score, decision, blockers, missing, breakeven, scenarios, createdAt: new Date().toISOString() };
+    lastOtcReview = review;
+    $("saveOtcReview").disabled = false;
+    const scenarioHtml = complex ? `<div class="otc-complex-note">该产品含路径或非标准条款，不能套用普通欧式期权公式。必须逐观察日建模。</div>` : `<div class="otc-scenarios">${scenarios.map(row => `<div><small>到期标的 ${money(row.terminal)}</small><b class="${row.net >= 0 ? "positive" : "negative"}">${row.net >= 0 ? "+" : ""}${money(row.net)} / 单位</b></div>`).join("")}</div>`;
+    els.otcResult.className = `otc-result ${decision === "BLOCK" ? "blocked" : decision === "MANUAL REVIEW" ? "manual" : "review"}`;
+    els.otcResult.innerHTML = `<div class="otc-result-head"><div><small>OTC 20 分审查</small><b>${decision} · ${score}/20</b></div><span>${escapeHtml(product)} · ${escapeHtml(position)}</span></div>
+      <div class="otc-summary"><div><small>名义本金</small><b>${money(notional, 0)}</b></div><div><small>到期日</small><b>${escapeHtml(expiry || "--")}</b></div><div><small>盈亏平衡</small><b>${finite(breakeven) ? money(breakeven) : "需条款模型"}</b></div><div><small>交易对手</small><b>${escapeHtml(counterparty || "未提供")}</b></div></div>
+      ${scenarioHtml}
+      <div class="otc-findings"><b>阻断项</b><p>${blockers.length ? escapeHtml(blockers.join("；")) : "无绝对阻断项，但仍须人工、法律与适当性复核。"}</p><b>待补证据</b><p>${missing.length ? escapeHtml(missing.join("、")) : "五项证据已勾选；请确认文件内容确实支持。"}</p><small>计算仅为每单位到期静态损益，未包含乘数、数量、费用、提前退出、信用违约或路径依赖。</small></div>`;
+    return review;
+  }
+  function renderOtcCases() {
+    els.otcSaved.innerHTML = otcCases.length ? `<h3>已保存审查</h3>${otcCases.slice().reverse().map((item, reverseIndex) => {
+      const index = otcCases.length - 1 - reverseIndex;
+      return `<div class="otc-case"><div><b>${escapeHtml(item.underlying)} · ${escapeHtml(item.product)} · ${item.score}/20</b><small>${escapeHtml(item.decision)} · ${escapeHtml(item.expiry)} · ${escapeHtml(new Date(item.createdAt).toLocaleString("zh-CN", { hour12: false }))}</small></div><button data-remove-otc="${index}" aria-label="删除 ${escapeHtml(item.underlying)} 场外审查">×</button></div>`;
+    }).join("")}` : "";
+  }
   function runScan() {
     const complete = watchlist.filter(item => alpha(item).complete).sort((a, b) => alpha(b).total - alpha(a).total);
     const technical = [...watchlist].sort((a, b) => Number(b.technical) - Number(a.technical))[0];
@@ -417,6 +482,13 @@
       renderRadar();
       showToast("执行计划已删除");
     }
+    const removeOtc = event.target.closest("[data-remove-otc]");
+    if (removeOtc) {
+      otcCases.splice(Number(removeOtc.dataset.removeOtc), 1);
+      localStorage.setItem(STORAGE.otcCases, JSON.stringify(otcCases));
+      renderOtcCases();
+      showToast("场外审查已删除");
+    }
   });
   ["accountSize","riskPct","entryDate","entryPrice","stopPrice","targetPrice","optionPremium","contractExpiry","contractStrike","contractSide"].forEach(id => $(id).addEventListener("input", calculateRisk));
   $("tradeForm").addEventListener("submit", event => {
@@ -498,6 +570,17 @@
     localStorage.removeItem(STORAGE.notes);
     renderNotes();
     showToast("本地复盘记录已清空");
+  });
+  $("evaluateOtc").addEventListener("click", () => {
+    const review = evaluateOtc();
+    showToast(`${review.underlying || "场外合约"}：${review.decision}`);
+  });
+  $("saveOtcReview").addEventListener("click", () => {
+    if (!lastOtcReview) { showToast("请先生成场外审查"); return; }
+    otcCases.push({ ...lastOtcReview, createdAt: new Date().toISOString() });
+    localStorage.setItem(STORAGE.otcCases, JSON.stringify(otcCases));
+    renderOtcCases();
+    showToast("场外审查已保存在当前浏览器");
   });
 
   renderAll({ resetForm: true });
