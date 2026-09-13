@@ -14,7 +14,7 @@ test("IBKR snapshot contains ten rows and the verified close prices", () => {
   assert.equal(snapshot.rows.find(row => row.ticker === "META").price, 648.03);
 });
 
-test("every row has the V1.6 technical indicators", () => {
+test("every row has the V1.7 technical indicators", () => {
   for (const row of snapshot.rows) {
     for (const field of ["ma20", "ma50", "ma200", "rsi14", "macd", "macdSignal", "macdHist", "volume", "relVolume", "atr14", "technical"]) {
       assert.equal(Number.isFinite(row[field]), true, `${row.ticker}.${field}`);
