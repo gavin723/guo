@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Gavin 的 Alpha 市场、机构、资金、结构与风险综合决策系统。" />
-    <title>Alpha Radar V1.6</title>
+    <title>Alpha Radar V1.7</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -14,7 +14,7 @@
     <header class="topbar shell">
       <a class="brand" href="#radar" aria-label="返回雷达首页">
         <span class="brand-mark">A</span>
-        <span><strong>ALPHA RADAR</strong><small>V1.6 · TECHNICAL + OPTIONS</small></span>
+        <span><strong>ALPHA RADAR</strong><small>V1.7 · LISTED + OTC OPTIONS</small></span>
       </a>
       <div class="top-actions">
         <span class="privacy-pill"><i></i> IBKR 已连接</span>
@@ -146,9 +146,46 @@
         </aside>
       </section>
 
+      <section id="otcReview" class="panel otc-panel" aria-labelledby="otcTitle">
+        <div class="section-head">
+          <div><span class="section-index">03</span><h2 id="otcTitle">场外期权条款审查</h2></div>
+          <span class="skill-badge">SKILL · changwai-qiuzhu-cn</span>
+        </div>
+        <div class="otc-layout">
+          <form id="otcForm" class="otc-form">
+            <div class="otc-fields">
+              <label>标的<input id="otcUnderlying" maxlength="20" placeholder="如 NVDA" required /></label>
+              <label>产品类型<select id="otcProductType"><option value="CALL">欧式 Call</option><option value="PUT">欧式 Put</option><option value="BARRIER">障碍期权</option><option value="AUTOCALL">自动赎回</option><option value="STRUCTURED">结构性票据</option><option value="OTHER">其他非标准合约</option></select></label>
+              <label>持仓方向<select id="otcPosition"><option value="BUY">买入 / 支付权利金</option><option value="SELL">卖出 / 收取权利金</option></select></label>
+              <label>名义本金 ($)<input id="otcNotional" type="number" min="0" step="100" placeholder="100000" required /></label>
+              <label>标的现价<input id="otcSpot" type="number" min="0" step="0.01" required /></label>
+              <label>行权价<input id="otcStrike" type="number" min="0" step="0.01" required /></label>
+              <label>每单位权利金<input id="otcPremium" type="number" min="0" step="0.01" required /></label>
+              <label>到期日<input id="otcExpiry" type="date" required /></label>
+              <label>交易对手 / 发行人<input id="otcCounterparty" placeholder="必须填写法律实体" required /></label>
+              <label>报价来源与时间<input id="otcQuoteSource" placeholder="机构、时间、币种" /></label>
+            </div>
+            <label class="otc-terms-label">关键条款<textarea id="otcTerms" rows="4" placeholder="粘贴观察日、障碍、敲入/敲出、自动赎回、结算、提前终止、费用等关键条款"></textarea></label>
+            <fieldset class="otc-checks">
+              <legend>五项证据门槛（每项 4 分）</legend>
+              <label><input type="checkbox" data-otc-check="docs" /> 已取得完整 term sheet 与支付公式</label>
+              <label><input type="checkbox" data-otc-check="pricing" /> 有独立估值或第二个可比报价</label>
+              <label><input type="checkbox" data-otc-check="counterparty" /> 已审查交易对手、担保与抵押安排</label>
+              <label><input type="checkbox" data-otc-check="exit" /> 提前终止、争议估值与退出报价明确</label>
+              <label><input type="checkbox" data-otc-check="loss" /> 已理解最大损失、路径条件与资金占用</label>
+            </fieldset>
+            <div class="otc-actions"><button class="primary-btn" id="evaluateOtc" type="button"><span>生成场外审查</span><b>→</b></button><button class="ghost-btn" id="saveOtcReview" type="button" disabled>保存审查</button></div>
+          </form>
+          <div>
+            <div id="otcResult" class="otc-result"><b>等待条款</b><p>填写合约信息并确认证据门槛。输出只会是 BLOCK、NEEDS REVIEW 或 MANUAL REVIEW，不会自动生成买入指令。</p></div>
+            <div class="otc-saved" id="otcSaved"></div>
+          </div>
+        </div>
+      </section>
+
       <section id="journal" class="panel intelligence-panel">
         <div class="section-head">
-          <div><span class="section-index">03</span><h2>资金异动、数据源与复盘</h2></div>
+          <div><span class="section-index">04</span><h2>资金异动、数据源与复盘</h2></div>
           <button class="ghost-btn compact" id="clearJournal" type="button">清空本地记录</button>
         </div>
         <div class="intelligence-grid">
@@ -173,7 +210,7 @@
       </section>
     </main>
 
-    <footer class="shell"><span>Alpha Radar V1.6</span><span>规则优先 · 风险优先 · 数据透明</span></footer>
+    <footer class="shell"><span>Alpha Radar V1.7</span><span>规则优先 · 风险优先 · 数据透明</span></footer>
 
     <dialog id="importDialog">
       <form method="dialog" class="dialog-card">
