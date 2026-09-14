@@ -47,7 +47,7 @@ await page.locator("#importText").fill(JSON.stringify({ watchlist: [{
   entryPlan: { status: "READY", direction: "CALL", triggerType: "突破确认", entry: 101, stop: 98, target: 107, rr: 2, timing: "测试触发" }
 }] }));
 await page.locator("#applyImport").click();
-assert.equal(await page.locator("#radarRows tr").count(), 1);
+assert.equal(await page.locator("#radarRows tr").count(), 11);
 
 await page.locator("#contractSide").selectOption("STOCK");
 await page.locator("#optionPremium").fill("");
@@ -67,9 +67,11 @@ assert.equal(await page.locator(".plan-card").count(), 1);
 await page.screenshot({ path: "artifacts/alpha-radar-desktop.png", fullPage: true });
 await page.setViewportSize({ width: 390, height: 844 });
 await page.reload({ waitUntil: "networkidle" });
-assert.equal(await page.locator("#radarRows tr").count(), 1);
+assert.equal(await page.locator("#radarRows tr").count(), 11);
+await page.locator("#restoreTop10").click();
+assert.equal(await page.locator("#radarRows tr").count(), 10);
 await page.screenshot({ path: "artifacts/alpha-radar-mobile.png", fullPage: true });
 
 assert.deepEqual(errors, []);
-console.log("Browser QA passed: scan, selection, risk guard, plan save, import persistence, desktop and mobile rendering.");
+console.log("Browser QA passed: TOP10 invariant and restore, scan, risk guard, plan save, import persistence, desktop and mobile rendering.");
 await browser.close();

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Gavin 的 Alpha 市场、机构、资金、结构与风险综合决策系统。" />
-    <title>Alpha Radar V1.7</title>
+    <title>Alpha Radar V1.8</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -14,10 +14,10 @@
     <header class="topbar shell">
       <a class="brand" href="#radar" aria-label="返回雷达首页">
         <span class="brand-mark">A</span>
-        <span><strong>ALPHA RADAR</strong><small>V1.7 · LISTED + OTC OPTIONS</small></span>
+        <span><strong>ALPHA RADAR</strong><small>V1.8 · LEAN + US OPTIONS</small></span>
       </a>
       <div class="top-actions">
-        <span class="privacy-pill"><i></i> IBKR 已连接</span>
+        <span class="privacy-pill"><i></i> IBKR 快照模式</span>
         <button class="ghost-btn compact" id="openImport" type="button">导入今日数据</button>
       </div>
     </header>
@@ -55,11 +55,11 @@
 
       <section class="panel radar-panel" aria-labelledby="rankingTitle">
         <div class="section-head">
-          <div><span class="section-index">01</span><h2 id="rankingTitle">Alpha 候选榜</h2></div>
-          <div class="legend"><span><i class="dot aplus"></i>A+ ≥17</span><span><i class="dot a"></i>A 15–16</span><span><i class="dot watch"></i>观察 ≤14</span></div>
+          <div><span class="section-index">01</span><h2 id="rankingTitle">美股交易热度 TOP10</h2></div>
+          <div class="top-actions"><span class="privacy-pill lean-pill"><i></i> LEAN CORE</span><button class="ghost-btn compact" id="restoreTop10" type="button">恢复 TOP10</button></div>
         </div>
         <div class="metrics-strip">
-          <div><small>扫描标的</small><strong id="metricCount">10</strong></div>
+          <div><small>TOP10 + 自选</small><strong id="metricCount">10</strong></div>
           <div><small>技术候选</small><strong id="metricQualified">--</strong></div>
           <div><small>完整 Alpha 数据</small><strong id="metricFlow">0</strong></div>
           <div><small>可执行计划</small><strong id="metricPlans">0 / 2</strong></div>
@@ -70,7 +70,7 @@
             <tbody id="radarRows"></tbody>
           </table>
         </div>
-        <p class="source-note">价格与指标由 IBKR 截至 2026-09-11 的最后一根完整日线计算，不是盘中连续推送。市场休市或插件不在线时显示快照时间；缺少机构、资金、新闻或期权 Volume 时不会生成可执行信号。</p>
+        <p class="source-note">当前页面明确使用 IBKR 验证快照，不冒充实时行情。LEAN 后端已固定在仓库；接入 IBKR Pro 与实时行情订阅后，可生成按成交额排序的动态 TOP10、技术评分和美式期权候选。缺少机构、资金、新闻或期权 Volume 时不会生成可执行信号。</p>
       </section>
 
       <section id="cockpit" class="workspace-grid">
@@ -210,7 +210,7 @@
       </section>
     </main>
 
-    <footer class="shell"><span>Alpha Radar V1.7</span><span>规则优先 · 风险优先 · 数据透明</span></footer>
+    <footer class="shell"><span>Alpha Radar V1.8</span><span>规则优先 · 风险优先 · 数据透明</span></footer>
 
     <dialog id="importDialog">
       <form method="dialog" class="dialog-card">

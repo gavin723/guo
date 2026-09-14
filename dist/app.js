@@ -3,7 +3,7 @@
 
   const SNAPSHOT = window.ALPHA_SNAPSHOT || { marketScore: 0, rows: [], asof: null, source: "未连接" };
   const STORAGE = {
-    watchlist: "alpha-v16-watchlist-v1",
+    watchlist: "alpha-v18-watchlist-v1",
     plans: "alpha-v16-plans-v1",
     notes: "alpha-v16-notes-v1",
     otcCases: "alpha-v16-otc-cases-v1",
@@ -11,7 +11,8 @@
   };
   const componentNames = { market: "市场", institution: "机构", capital: "资金", technical: "结构", catalyst: "催化" };
   const defaultRows = SNAPSHOT.rows.map(row => structuredClone(row));
-  let watchlist = load(STORAGE.watchlist, defaultRows);
+  const defaultTickers = new Set(defaultRows.map(row => row.ticker));
+  let watchlist = mergeUniverse(defaultRows, load(STORAGE.watchlist, []));
   let plans = load(STORAGE.plans, []);
   let notes = load(STORAGE.notes, []);
   let otcCases = load(STORAGE.otcCases, []);
@@ -42,6 +43,21 @@
     } catch {
       return structuredClone(fallback);
     }
+  }
+  function mergeUniverse(baseRows, importedRows) {
+    const imported = Array.isArray(importedRows) ? importedRows : [];
+    const importedByTicker = new Map(imported.filter(Boolean).map(row => [String(row.ticker || "").toUpperCase(), row]));
+    const mergedBase = baseRows.map(base => {
+      const override = importedByTicker.get(base.ticker);
+      return override ? { ...structuredClone(base), ...structuredClone(override), ticker: base.ticker } : structuredClone(base);
+    });
+    const extras = imported
+      .filter(row => row && row.ticker && !defaultTickers.has(String(row.ticker).toUpperCase()))
+      .map(row => structuredClone(row));
+    return [...mergedBase, ...extras];
+  }
+  function dollarVolume(item) {
+    return finite(item.price) && finite(item.volume) ? Number(item.price) * Number(item.volume) : 0;
   }
   function finite(value) { return value !== null && value !== "" && Number.isFinite(Number(value)); }
   function clamp(value, min, max) { return Math.min(max, Math.max(min, Number(value))); }
@@ -105,7 +121,7 @@
     els.marketDecision.textContent = marketComponent() >= 14 ? "进攻但不追高" : marketComponent() >= 9 ? "中性，等待确认" : "中性偏防守";
   }
   function renderRadar() {
-    const sorted = [...watchlist].sort((a, b) => (alpha(b).total ?? alpha(b).verified) - (alpha(a).total ?? alpha(a).verified));
+    const sorted = [...watchlist].sort((a, b) => dollarVolume(b) - dollarVolume(a));
     els.radarRows.innerHTML = sorted.map((item, index) => {
       const result = alpha(item);
       const g = grade(result.total, result.complete);
@@ -503,6 +519,13 @@
     renderRadar();
     showToast(`${selected} 执行计划已保存`);
   });
+  $("restoreTop10").addEventListener("click", () => {
+    watchlist = defaultRows.map(row => structuredClone(row));
+    selected = watchlist.find(item => item.ticker === "NVDA")?.ticker || watchlist[0]?.ticker;
+    localStorage.removeItem(STORAGE.watchlist);
+    renderAll({ resetForm: true });
+    showToast("已恢复美股交易热度 TOP10");
+  });
   $("openImport").addEventListener("click", () => {
     els.importFeedback.textContent = "";
     els.importText.value = JSON.stringify({ watchlist: [currentItem()] }, null, 2);
@@ -510,12 +533,13 @@
   });
   $("applyImport").addEventListener("click", () => {
     try {
-      watchlist = parseImport(els.importText.value);
-      selected = watchlist[0].ticker;
+      const importedRows = parseImport(els.importText.value);
+      watchlist = mergeUniverse(defaultRows, importedRows);
+      selected = importedRows[0].ticker;
       localStorage.setItem(STORAGE.watchlist, JSON.stringify(watchlist));
       els.dialog.close();
       renderAll({ resetForm: true });
-      showToast("真实数据已导入，Alpha 评分已重算");
+      showToast(`数据已合并，固定保留 ${defaultRows.length} 个 TOP10 基础标的`);
     } catch (error) {
       els.importFeedback.className = "import-feedback error";
       els.importFeedback.textContent = error.message;

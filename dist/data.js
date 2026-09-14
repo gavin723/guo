@@ -1,5 +1,5 @@
 window.ALPHA_SNAPSHOT = {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "source": "Interactive Brokers (IBKR)",
   "asof": "2026-09-11T13:30:00Z",
   "marketStatus": "CLOSED",

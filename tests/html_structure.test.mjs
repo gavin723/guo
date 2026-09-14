@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8"
 
 test("required Alpha workflow controls are present exactly once", () => {
   const ids = [
-    "symbolSearch", "findSymbol", "marketScore", "radarRows", "scoreBreakdown",
+    "symbolSearch", "findSymbol", "marketScore", "radarRows", "restoreTop10", "scoreBreakdown",
     "optionContract", "tradeForm", "optionPremium", "contractExpiry",
     "contractStrike", "contractSide", "entryDate", "indicatorDashboard", "entryTiming",
     "chartValidation", "chartUpload", "evaluateChart", "otcReview", "otcForm",
@@ -41,4 +41,12 @@ test("OTC review exposes the evidence gate and never promises auto execution", (
   assert.match(html, /changwai-qiuzhu-cn/);
   assert.equal((html.match(/data-otc-check=/g) || []).length, 5);
   assert.match(html, /BLOCK、NEEDS REVIEW 或 MANUAL REVIEW/);
+});
+
+
+test("V1.8 keeps TOP10 primary and labels data mode honestly", () => {
+  assert.match(html, /美股交易热度 TOP10/);
+  assert.match(html, /LEAN CORE/);
+  assert.match(html, /IBKR 快照模式/);
+  assert.doesNotMatch(html, /IBKR 已连接/);
 });

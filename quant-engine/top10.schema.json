@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Alpha Radar LEAN TOP10 output",
+  "type": "object",
+  "required": ["version", "engine", "mode", "asof", "rows"],
+  "properties": {
+    "version": { "type": "string" },
+    "engine": { "const": "QuantConnect LEAN" },
+    "mode": { "enum": ["RESEARCH_PAPER_ONLY", "LIVE_READ_ONLY"] },
+    "asof": { "type": "string" },
+    "rows": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["ticker", "price", "volume", "technical", "status"],
+        "properties": {
+          "ticker": { "type": "string" },
+          "technical": { "type": "integer", "minimum": 0, "maximum": 20 },
+          "status": { "enum": ["A+ ALERT", "WAIT"] }
+        }
+      }
+    }
+  }
+}
