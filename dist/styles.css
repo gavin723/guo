@@ -75,6 +75,7 @@ h1 span { color: #93a4ae; }
 
 .panel { background: linear-gradient(145deg, rgba(16, 31, 39, .94), rgba(10, 21, 27, .93)); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); }
 .radar-panel, .intelligence-panel { padding: 28px; }
+.volatility-panel{margin-top:18px}.compact-table table{min-width:820px}.compact-table td{padding-top:12px;padding-bottom:12px}
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
 .section-head > div:first-child { display: flex; align-items: baseline; gap: 12px; }
 .section-index { color: var(--lime); font: 700 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
@@ -116,13 +117,3 @@ dialog{width:min(720px,calc(100% - 30px));padding:0;border:1px solid #2b414b;bor
 @media (max-width: 860px){.hero-grid,.workspace-grid,.intelligence-grid,.chart-validation-grid,.otc-layout{grid-template-columns:1fr}.hero-grid{gap:22px}.hero-section{padding-top:32px}.metrics-strip{grid-template-columns:repeat(2,1fr)}.metrics-strip>div:nth-child(2){border-right:0}.metrics-strip>div:nth-child(-n+2){border-bottom:1px solid var(--line)}.form-grid,.otc-fields{grid-template-columns:repeat(2,1fr)}.score-breakdown{grid-template-columns:repeat(5,minmax(90px,1fr));overflow-x:auto}.indicator-dashboard{grid-template-columns:repeat(2,1fr)}.option-contract{grid-template-columns:repeat(3,1fr)}.option-contract>div{border-right:0}}
 @media (max-width: 560px){.shell{width:min(100% - 24px,1180px)}.topbar{height:70px}.privacy-pill{display:none}.hero-section{padding-top:24px}h1{font-size:36px}.hero-actions{align-items:flex-start;flex-direction:column}.symbol-search{width:100%}.symbol-search input{width:100%}.radar-panel,.intelligence-panel,.cockpit-panel,.detail-panel,.otc-panel{padding:19px;border-radius:14px}.legend,.skill-badge{display:none}.form-grid,.otc-fields,.otc-checks{grid-template-columns:1fr}.risk-output{grid-template-columns:repeat(3,1fr)}.subhead{align-items:flex-start;gap:8px}.top-actions .ghost-btn{font-size:10px}.indicator-dashboard{grid-template-columns:1fr 1fr}.timing-head,.otc-result-head{align-items:flex-start}.timing-levels,.otc-summary,.otc-scenarios{grid-template-columns:1fr}.option-contract{grid-template-columns:repeat(2,1fr)}.option-contract .contract-main{grid-column:1/-1}.otc-actions{flex-direction:column}.otc-actions button{width:100%}footer{gap:18px}}
 @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;transition:none!important}}
-
-
-/* V1.8 engine and TOP10 controls */
-.lean-pill { border-color: rgba(200, 241, 91, .32); color: var(--lime); }
-.lean-pill i { background: var(--lime); box-shadow: 0 0 12px rgba(200, 241, 91, .45); }
-#restoreTop10 { white-space: nowrap; }
-@media (max-width: 720px) {
-  .radar-panel .section-head { align-items: flex-start; }
-  .radar-panel .top-actions { width: 100%; justify-content: space-between; }
-}
