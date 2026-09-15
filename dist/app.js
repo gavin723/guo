@@ -3,7 +3,7 @@
 
   const SNAPSHOT = window.ALPHA_SNAPSHOT || { marketScore: 0, rows: [], asof: null, source: "未连接" };
   const STORAGE = {
-    watchlist: "alpha-v18-watchlist-v1",
+    watchlist: "alpha-v16-watchlist-v1",
     plans: "alpha-v16-plans-v1",
     notes: "alpha-v16-notes-v1",
     otcCases: "alpha-v16-otc-cases-v1",
@@ -11,8 +11,8 @@
   };
   const componentNames = { market: "市场", institution: "机构", capital: "资金", technical: "结构", catalyst: "催化" };
   const defaultRows = SNAPSHOT.rows.map(row => structuredClone(row));
-  const defaultTickers = new Set(defaultRows.map(row => row.ticker));
-  let watchlist = mergeUniverse(defaultRows, load(STORAGE.watchlist, []));
+  let watchlist = load(STORAGE.watchlist, defaultRows);
+  if (!watchlist.length) watchlist = structuredClone(defaultRows);
   let plans = load(STORAGE.plans, []);
   let notes = load(STORAGE.notes, []);
   let otcCases = load(STORAGE.otcCases, []);
@@ -43,21 +43,6 @@
     } catch {
       return structuredClone(fallback);
     }
-  }
-  function mergeUniverse(baseRows, importedRows) {
-    const imported = Array.isArray(importedRows) ? importedRows : [];
-    const importedByTicker = new Map(imported.filter(Boolean).map(row => [String(row.ticker || "").toUpperCase(), row]));
-    const mergedBase = baseRows.map(base => {
-      const override = importedByTicker.get(base.ticker);
-      return override ? { ...structuredClone(base), ...structuredClone(override), ticker: base.ticker } : structuredClone(base);
-    });
-    const extras = imported
-      .filter(row => row && row.ticker && !defaultTickers.has(String(row.ticker).toUpperCase()))
-      .map(row => structuredClone(row));
-    return [...mergedBase, ...extras];
-  }
-  function dollarVolume(item) {
-    return finite(item.price) && finite(item.volume) ? Number(item.price) * Number(item.volume) : 0;
   }
   function finite(value) { return value !== null && value !== "" && Number.isFinite(Number(value)); }
   function clamp(value, min, max) { return Math.min(max, Math.max(min, Number(value))); }
@@ -115,13 +100,14 @@
     renderOtcCases();
     updateRegimeButtons();
     calculateRisk();
+    renderVolatility();
   }
   function renderMarket() {
     els.marketScore.textContent = marketComponent();
     els.marketDecision.textContent = marketComponent() >= 14 ? "进攻但不追高" : marketComponent() >= 9 ? "中性，等待确认" : "中性偏防守";
   }
   function renderRadar() {
-    const sorted = [...watchlist].sort((a, b) => dollarVolume(b) - dollarVolume(a));
+    const sorted = [...watchlist].sort((a, b) => (alpha(b).total ?? alpha(b).verified) - (alpha(a).total ?? alpha(a).verified));
     els.radarRows.innerHTML = sorted.map((item, index) => {
       const result = alpha(item);
       const g = grade(result.total, result.complete);
@@ -259,6 +245,17 @@
     els.flowAlerts.innerHTML = alerts.length ? alerts.map(item =>
       `<button class="flow-alert" data-select="${escapeHtml(item.ticker)}" type="button"><span class="pulse"></span><span><b>${item.ticker} · ${escapeHtml(item.option?.expiration || "合约待验证")}</b><small>期权成交/持仓量比 ${Number(item.optionsRatio).toFixed(1)}× · ${compactMoney(item.optionPremiumFlow)}</small></span><strong>${Number(item.optionsRatio) >= 5 ? "强异动" : "关注"}</strong></button>`
     ).join("") : `<div class="hard-rule"><b>当前不生成异常大单</b><p>IBKR 已返回部分合约报价和 OI，但没有全市场逐笔期权流与稳定 Volume。仅凭 OI 不能判断主动买入或卖出，因此 TOP10 与买卖信号保持关闭。</p></div>`;
+  }
+
+  function renderVolatility() {
+    const body = $("volatilityRows");
+    if (!body) return;
+    const rows = watchlist.slice().sort((a, b) => Number(b.atrPct || 0) - Number(a.atrPct || 0)).slice(0, 10);
+    body.innerHTML = rows.map((item, index) => `<tr${item.ticker === selected ? ' class="selected"' : ''}>
+      <td>${index + 1}</td><td class="ticker-cell"><strong>${escapeHtml(item.ticker)}</strong><small>${escapeHtml(item.name || "")}</small></td>
+      <td>${money(item.price)}</td><td>${money(item.atr14)}</td><td><strong class="${Number(item.atrPct) >= 4 ? "positive" : ""}">${number(item.atrPct, 1)}%</strong></td>
+      <td>${number(item.relVolume, 2)}×</td><td>${number(item.rsi14, 1)}</td><td>${escapeHtml(item.trendDirection || "WAIT")}</td>
+      <td><button class="row-btn" data-select="${escapeHtml(item.ticker)}" type="button">评估</button></td></tr>`).join("");
   }
   function calculateRisk() {
     const item = currentItem();
@@ -465,6 +462,13 @@
   }
 
   $("runScan").addEventListener("click", runScan);
+  $("restoreTop10").addEventListener("click", () => {
+    watchlist = structuredClone(defaultRows);
+    selected = watchlist.find(item => item.ticker === "NVDA")?.ticker || watchlist[0]?.ticker;
+    localStorage.setItem(STORAGE.watchlist, JSON.stringify(watchlist));
+    renderAll({ resetForm: true });
+    showToast("已恢复内置 TOP10 免费快照");
+  });
   $("findSymbol").addEventListener("click", findSymbol);
   $("symbolSearch").addEventListener("keydown", event => { if (event.key === "Enter") findSymbol(); });
   function findSymbol() {
@@ -519,13 +523,6 @@
     renderRadar();
     showToast(`${selected} 执行计划已保存`);
   });
-  $("restoreTop10").addEventListener("click", () => {
-    watchlist = defaultRows.map(row => structuredClone(row));
-    selected = watchlist.find(item => item.ticker === "NVDA")?.ticker || watchlist[0]?.ticker;
-    localStorage.removeItem(STORAGE.watchlist);
-    renderAll({ resetForm: true });
-    showToast("已恢复美股交易热度 TOP10");
-  });
   $("openImport").addEventListener("click", () => {
     els.importFeedback.textContent = "";
     els.importText.value = JSON.stringify({ watchlist: [currentItem()] }, null, 2);
@@ -533,13 +530,12 @@
   });
   $("applyImport").addEventListener("click", () => {
     try {
-      const importedRows = parseImport(els.importText.value);
-      watchlist = mergeUniverse(defaultRows, importedRows);
-      selected = importedRows[0].ticker;
+      watchlist = parseImport(els.importText.value);
+      selected = watchlist[0].ticker;
       localStorage.setItem(STORAGE.watchlist, JSON.stringify(watchlist));
       els.dialog.close();
       renderAll({ resetForm: true });
-      showToast(`数据已合并，固定保留 ${defaultRows.length} 个 TOP10 基础标的`);
+      showToast("真实数据已导入，Alpha 评分已重算");
     } catch (error) {
       els.importFeedback.className = "import-feedback error";
       els.importFeedback.textContent = error.message;
