@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Gavin 的 Alpha 市场、机构、资金、结构与风险综合决策系统。" />
-    <title>Alpha Radar V1.8</title>
+    <title>Alpha Radar V1.9 Free</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -14,10 +14,11 @@
     <header class="topbar shell">
       <a class="brand" href="#radar" aria-label="返回雷达首页">
         <span class="brand-mark">A</span>
-        <span><strong>ALPHA RADAR</strong><small>V1.8 · LEAN + US OPTIONS</small></span>
+        <span><strong>ALPHA RADAR</strong><small>V1.9 · FREE WORK MODE</small></span>
       </a>
       <div class="top-actions">
-        <span class="privacy-pill"><i></i> IBKR 快照模式</span>
+        <span class="privacy-pill"><i></i> 免费数据工作模式</span>
+        <button class="ghost-btn compact" id="restoreTop10" type="button">恢复 TOP10</button>
         <button class="ghost-btn compact" id="openImport" type="button">导入今日数据</button>
       </div>
     </header>
@@ -28,7 +29,7 @@
         <div class="hero-grid">
           <div>
             <h1>真实数据先验证，<br /><span>信号不完整就等待。</span></h1>
-            <p class="hero-copy">用 IBKR 日线计算 MA20/50/200、MACD、RSI、Volume/RVOL 与 ATR；只有技术共振、截图验证和期权流动性全部通过，才允许进入计划。</p>
+            <p class="hero-copy">即使没有付费实时数据也能工作：内置最近一次已验证快照、TOP10 活跃候选、波动率排序、MA/MACD/RSI/RVOL/ATR、入场计划和 K 线截图验证。每项数据都显示时间，不把快照说成实时。</p>
           </div>
           <div class="market-card">
             <div class="market-card-head">
@@ -49,17 +50,31 @@
           <div class="symbol-search"><input id="symbolSearch" maxlength="8" placeholder="输入标的，如 NVDA" aria-label="输入股票代码" /><button id="findSymbol" type="button">验证走势</button></div>
           <button class="primary-btn" id="runScan" type="button"><span>运行 Alpha 评估</span><b>→</b></button>
           <a class="secondary-btn chart-shortcut" href="#chartValidation">上传 K 线验证</a>
-          <span id="scanStatus" class="scan-status">IBKR 数据截至 2026-09-11 美股收盘</span>
+          <span id="scanStatus" class="scan-status">免费快照模式 · 可导入 CSV/JSON 更新</span>
         </div>
+      </section>
+
+      <section class="panel radar-panel volatility-panel" aria-labelledby="volatilityTitle">
+        <div class="section-head">
+          <div><span class="section-index">01B</span><h2 id="volatilityTitle">波动率 TOP10</h2></div>
+          <span class="data-badge">按 ATR% 排序 · 非实时</span>
+        </div>
+        <div class="table-wrap compact-table">
+          <table>
+            <thead><tr><th>#</th><th>标的</th><th>最近价</th><th>ATR14</th><th>ATR%</th><th>RVOL</th><th>RSI14</th><th>趋势</th><th>操作</th></tr></thead>
+            <tbody id="volatilityRows"></tbody>
+          </table>
+        </div>
+        <p class="source-note">用于免费模式下快速筛选波动较大且流动性较好的候选。点击标的进入完整评分；正式入场前仍需更新行情并验证期权 Bid/Ask、Volume 与 OI。</p>
       </section>
 
       <section class="panel radar-panel" aria-labelledby="rankingTitle">
         <div class="section-head">
-          <div><span class="section-index">01</span><h2 id="rankingTitle">美股交易热度 TOP10</h2></div>
-          <div class="top-actions"><span class="privacy-pill lean-pill"><i></i> LEAN CORE</span><button class="ghost-btn compact" id="restoreTop10" type="button">恢复 TOP10</button></div>
+          <div><span class="section-index">01</span><h2 id="rankingTitle">Alpha 候选榜</h2></div>
+          <div class="legend"><span><i class="dot aplus"></i>A+ ≥17</span><span><i class="dot a"></i>A 15–16</span><span><i class="dot watch"></i>观察 ≤14</span></div>
         </div>
         <div class="metrics-strip">
-          <div><small>TOP10 + 自选</small><strong id="metricCount">10</strong></div>
+          <div><small>扫描标的</small><strong id="metricCount">10</strong></div>
           <div><small>技术候选</small><strong id="metricQualified">--</strong></div>
           <div><small>完整 Alpha 数据</small><strong id="metricFlow">0</strong></div>
           <div><small>可执行计划</small><strong id="metricPlans">0 / 2</strong></div>
@@ -70,7 +85,7 @@
             <tbody id="radarRows"></tbody>
           </table>
         </div>
-        <p class="source-note">当前页面明确使用 IBKR 验证快照，不冒充实时行情。LEAN 后端已固定在仓库；接入 IBKR Pro 与实时行情订阅后，可生成按成交额排序的动态 TOP10、技术评分和美式期权候选。缺少机构、资金、新闻或期权 Volume 时不会生成可执行信号。</p>
+        <p class="source-note">价格与指标由 IBKR 截至 2026-09-11 的最后一根完整日线计算，不是盘中连续推送。市场休市或插件不在线时显示快照时间；缺少机构、资金、新闻或期权 Volume 时不会生成可执行信号。</p>
       </section>
 
       <section id="cockpit" class="workspace-grid">
@@ -210,7 +225,7 @@
       </section>
     </main>
 
-    <footer class="shell"><span>Alpha Radar V1.8</span><span>规则优先 · 风险优先 · 数据透明</span></footer>
+    <footer class="shell"><span>Alpha Radar V1.9 Free</span><span>快照可用 · 风险优先 · 数据透明</span></footer>
 
     <dialog id="importDialog">
       <form method="dialog" class="dialog-card">
